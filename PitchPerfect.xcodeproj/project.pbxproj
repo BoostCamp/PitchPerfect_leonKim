@@ -42,7 +42,7 @@
 		5A6E81301E19A2C50098E64B = {
 			isa = PBXGroup;
 			children = (
-				5A6E813B1E19A2C50098E64B /* PitchPerfact */,
+				5A6E813B1E19A2C50098E64B /* PitchPerfect */,
 				5A6E813A1E19A2C50098E64B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -55,7 +55,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		5A6E813B1E19A2C50098E64B /* PitchPerfact */ = {
+		5A6E813B1E19A2C50098E64B /* PitchPerfect */ = {
 			isa = PBXGroup;
 			children = (
 				5AF4E4CE1E1C717600B8053A /* playsoundsviewcontroller-audio.swift */,
@@ -67,6 +67,7 @@
 				5A6E81481E19A2C50098E64B /* Info.plist */,
 				5A247D811E1B1D2900221B81 /* PlaySoundsViewController.swift */,
 			);
+			name = PitchPerfect;
 			path = PitchPerfact;
 			sourceTree = "<group>";
 		};

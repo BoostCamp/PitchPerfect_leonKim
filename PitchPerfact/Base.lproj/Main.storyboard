@@ -13,7 +13,7 @@
         <!--Record Sound View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="RecordSoundViewController" customModule="PitchPerfact" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="RecordSoundViewController" customModule="PitchPerfect" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
                         <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
@@ -72,7 +72,7 @@
         <!--Play Sounds View Controller-->
         <scene sceneID="azJ-Y2-AxD">
             <objects>
-                <viewController id="pML-DB-C1Q" customClass="PlaySoundsViewController" customModule="PitchPerfact" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="pML-DB-C1Q" customClass="PlaySoundsViewController" customModule="PitchPerfect" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="1AV-nw-J8l"/>
                         <viewControllerLayoutGuide type="bottom" id="f23-29-8S5"/>
@@ -146,7 +146,7 @@
                                             </stackView>
                                         </subviews>
                                     </stackView>
-                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillEqually" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="xhS-uS-Ihy">
+                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="xhS-uS-Ihy">
                                         <rect key="frame" x="0.0" y="519" width="343" height="64"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="xP6-i5-xk3" userLabel="StopButton">
