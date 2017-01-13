@@ -3,6 +3,8 @@
 
 # 추가된 기능
 
+![Story Board](screenshot01.png)
+
 1. Pause & Resume Button
 2. UI Slider
 
