@@ -29,7 +29,7 @@ extension PlaySoundsViewController: AVAudioPlayerDelegate {
     
     // MARK: PlayingState (raw values correspond to sender tags)
     
-    enum PlayingState { case playing, notPlaying }
+    enum PlayingState { case playing, notPlaying, pause }
     
     // MARK: Audio Functions
     
@@ -85,33 +85,43 @@ extension PlaySoundsViewController: AVAudioPlayerDelegate {
         
         // schedule to play and start the engine!
         audioPlayerNode.stop()
-        audioPlayerNode.scheduleFile(audioFile, at: nil) {
+        let afPos: AVAudioFramePosition = AVAudioFramePosition(Double(audioFile.processingFormat.sampleRate) * Double(slider.value))
+        let length = Float(getTotalTime()) - slider.value
+        let framestoplay: AVAudioFrameCount = AVAudioFrameCount(Float(audioFile.processingFormat.sampleRate) * length)
+        
+        if(framestoplay > 100) {
+            audioPlayerNode.scheduleSegment(audioFile, startingFrame: afPos, frameCount: framestoplay, at: nil)
+//            {
+//                
+//                var delayInSeconds: Double = 0
+//                
+//                if let lastRenderTime = self.audioPlayerNode.lastRenderTime, let playerTime = self.audioPlayerNode.playerTime(forNodeTime: lastRenderTime) {
+//                    
+//                    if let rate = rate {
+//                        delayInSeconds = Double(self.audioFile.length - playerTime.sampleTime) / Double(self.audioFile.processingFormat.sampleRate) / Double(rate)
+//                    } else {
+//                        delayInSeconds = Double(self.audioFile.length - playerTime.sampleTime) / Double(self.audioFile.processingFormat.sampleRate)
+//                    }
+//                }
             
-            var delayInSeconds: Double = 0
+                // schedule a stop timer for when audio finishes playing
+//                self.stopTimer = Timer(timeInterval: delayInSeconds, target: self, selector: #selector(PlaySoundsViewController.stopAudio), userInfo: nil, repeats: false)
+//                            RunLoop.main.add(self.stopTimer!, forMode: RunLoopMode.defaultRunLoopMode)
+//            }
             
-            if let lastRenderTime = self.audioPlayerNode.lastRenderTime, let playerTime = self.audioPlayerNode.playerTime(forNodeTime: lastRenderTime) {
-                
-                if let rate = rate {
-                    delayInSeconds = Double(self.audioFile.length - playerTime.sampleTime) / Double(self.audioFile.processingFormat.sampleRate) / Double(rate)
-                } else {
-                    delayInSeconds = Double(self.audioFile.length - playerTime.sampleTime) / Double(self.audioFile.processingFormat.sampleRate)
-                }
+            do {
+                try audioEngine.start()
+            } catch {
+                showAlert(Alerts.AudioEngineError, message: String(describing: error))
+                return
             }
             
-            // schedule a stop timer for when audio finishes playing
-            self.stopTimer = Timer(timeInterval: delayInSeconds, target: self, selector: #selector(PlaySoundsViewController.stopAudio), userInfo: nil, repeats: false)
-            RunLoop.main.add(self.stopTimer!, forMode: RunLoopMode.defaultRunLoopMode)
+            // play the recording!
+            audioPlayerNode.play()
+            
+            updateTimer = Timer(timeInterval: 0.05, target: self, selector: #selector(PlaySoundsViewController.onUpdateTimer), userInfo: nil, repeats: true)
+            RunLoop.main.add(self.updateTimer!, forMode: RunLoopMode.defaultRunLoopMode)
         }
-        
-        do {
-            try audioEngine.start()
-        } catch {
-            showAlert(Alerts.AudioEngineError, message: String(describing: error))
-            return
-        }
-        
-        // play the recording!
-        audioPlayerNode.play()
     }
     
     func stopAudio() {
@@ -124,8 +134,34 @@ extension PlaySoundsViewController: AVAudioPlayerDelegate {
             stopTimer.invalidate()
         }
         
+        if let updateTimer = updateTimer {
+            updateTimer.invalidate()
+        }
+        
         configureUI(.notPlaying)
                         
+        if let audioEngine = audioEngine {
+            audioEngine.stop()
+            audioEngine.reset()
+        }
+    }
+    
+    func pauseAudio() {
+        
+        if let audioPlayerNode = audioPlayerNode {
+            audioPlayerNode.stop()
+        }
+        
+        if let stopTimer = stopTimer {
+            stopTimer.invalidate()
+        }
+        
+        if let updateTimer = updateTimer {
+            updateTimer.invalidate()
+        }
+        
+        configureUI(.pause)
+        
         if let audioEngine = audioEngine {
             audioEngine.stop()
             audioEngine.reset()
@@ -142,14 +178,33 @@ extension PlaySoundsViewController: AVAudioPlayerDelegate {
     
     // MARK: UI Functions
 
-    func configureUI(_ playState: PlayingState) {
+    func configureUI(_ playState: PlayingState, rate: Float? = nil) {
         switch(playState) {
         case .playing:
             setPlayButtonsEnabled(false)
             stopButton.isEnabled = true
+            pauseButton.isEnabled = true
+            slider.isEnabled = false
+            
+            let totalTime = getTotalTime(rate: rate)
+            totalTimeLabel.text = "\(totalTime)"
+            slider.maximumValue = Float(totalTime)
+            
         case .notPlaying:
             setPlayButtonsEnabled(true)
             stopButton.isEnabled = false
+            pauseButton.isEnabled = false
+            slider.isEnabled = true
+            
+            resumeTime = 0
+            slider.value = 0.0
+            currentTimeLabel.text = "0.0"
+            
+        case .pause:
+            setPlayButtonsEnabled(false)
+            stopButton.isEnabled = true
+            pauseButton.isEnabled = true
+            slider.isEnabled = true
         }
     }
     
@@ -166,5 +221,37 @@ extension PlaySoundsViewController: AVAudioPlayerDelegate {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: Alerts.DismissAlert, style: .default, handler: nil))
         self.present(alert, animated: true, completion: nil)
+    }
+    
+    private func getTotalTime(rate: Float? = nil) -> Double {
+        if let rate = rate {
+            return Double(self.audioFile.length) / Double(self.audioFile.processingFormat.sampleRate) / Double(rate)
+        } else {
+            return Double(self.audioFile.length) / Double(self.audioFile.processingFormat.sampleRate)
+        }
+    }
+    
+    private func getCurrentTime() -> TimeInterval {
+        if let playerNode: AVAudioPlayerNode = audioPlayerNode, let nodeTime: AVAudioTime = playerNode.lastRenderTime, let playerTime: AVAudioTime = playerNode.playerTime(forNodeTime: nodeTime) {
+            if let rate = self.rate {
+                return Double(Double(playerTime.sampleTime) / playerTime.sampleRate) / Double(rate)
+            } else {
+                return Double(Double(playerTime.sampleTime) / playerTime.sampleRate)
+            }
+        }
+        return 0
+    }
+    
+    func onUpdateTimer() {
+        let curTime = Double(self.resumeTime) + getCurrentTime()
+        let totalTime = getTotalTime(rate: self.rate)
+        
+        if curTime >= totalTime {
+            stopAudio()
+        } else {
+            slider.value = Float(curTime)
+            currentTimeLabel.text = "\(curTime)"
+        }
+//        print("playing : \(audioPlayerNode.isPlaying), curTime: \(curTime), totalTime: \(totalTime)")
     }
 }

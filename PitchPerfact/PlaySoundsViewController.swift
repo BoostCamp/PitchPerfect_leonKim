@@ -17,14 +17,22 @@ class PlaySoundsViewController: UIViewController {
     @IBOutlet weak var vaderButton: UIButton!
     @IBOutlet weak var echoButton: UIButton!
     @IBOutlet weak var reverbButton: UIButton!
+    @IBOutlet weak var pauseButton: UIButton!
     @IBOutlet weak var stopButton: UIButton!
-    
+    @IBOutlet weak var slider: UISlider!
+    @IBOutlet weak var totalTimeLabel: UILabel!
+    @IBOutlet weak var currentTimeLabel: UILabel!
     var recordedAudioURL: URL!
 
     var audioFile:AVAudioFile!
     var audioEngine:AVAudioEngine!
     var audioPlayerNode: AVAudioPlayerNode!
     var stopTimer: Timer!
+    var updateTimer: Timer!
+    
+    var rate:Float!
+    var resumeTime:Float = 0
+    var currentButtonType:ButtonType!
     
     enum ButtonType: Int {
         case slow = 0, fast, chipmunk, vader, echo, reverb
@@ -43,11 +51,20 @@ class PlaySoundsViewController: UIViewController {
     // MARK: Actions
     
     @IBAction func playSoundForButton(_ sender: UIButton) {
-        switch(ButtonType(rawValue: sender.tag)!) {
+        self.rate = nil
+        currentButtonType = ButtonType(rawValue: sender.tag)!
+        playSounds(buttonType: currentButtonType)
+    }
+    
+    func playSounds(buttonType : ButtonType) {
+        self.rate = nil
+        switch(buttonType) {
         case .slow:
-            playSound(rate: 0.5)
+            self.rate=0.5
+            playSound(rate: rate)
         case .fast:
-            playSound(rate: 1.5)
+            self.rate=1.5
+            playSound(rate: rate)
         case .chipmunk:
             playSound(pitch: 1000)
         case .vader:
@@ -58,11 +75,27 @@ class PlaySoundsViewController: UIViewController {
             playSound(reverb: true)
         }
         
-        configureUI(.playing)
+        configureUI(.playing, rate: rate)
     }
     
     @IBAction func stopButtonPressed(_ sender: AnyObject) {
         stopAudio()
     }
+    
+    @IBAction func pause(_ sender: Any) {
+        if let thePlayerNode: AVAudioPlayerNode = audioPlayerNode {
+            if thePlayerNode.isPlaying {
+                pauseAudio()
+            } else {
+                resumeTime = slider.value
+                playSounds(buttonType: currentButtonType)
+            }
+        }
+    }
+    @IBAction func moveSoundTime(_ sender: UISlider) {
+        let sliderValue = sender.value
+        currentTimeLabel.text = "\(sliderValue)"
+    }
+    
 
 }
