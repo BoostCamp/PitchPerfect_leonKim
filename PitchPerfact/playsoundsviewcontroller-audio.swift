@@ -86,7 +86,7 @@ extension PlaySoundsViewController: AVAudioPlayerDelegate {
         // schedule to play and start the engine!
         audioPlayerNode.stop()
         let afPos: AVAudioFramePosition = AVAudioFramePosition(Double(audioFile.processingFormat.sampleRate) * Double(slider.value))
-        let length = Float(getTotalTime()) - slider.value
+        let length = Float(getTotalTime(rate: rate)) - slider.value
         let framestoplay: AVAudioFrameCount = AVAudioFrameCount(Float(audioFile.processingFormat.sampleRate) * length)
         
         if(framestoplay > 100) {
